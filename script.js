@@ -4,8 +4,7 @@
 // Координаты щелчка
 // https://yandex.ru/dev/maps/jsbox/2.1/event_properties/
 
-// Favorites object
-
+// Мои классы для объектов избранных мест и фото
 class FavorPlaces{
      constructor(lsObj){
          if (lsObj){
@@ -33,6 +32,35 @@ class FavorPlaces{
     }
 }
 
+class FavorImages{
+    constructor(lsObj){
+        if (lsObj){
+            this.images = lsObj
+        } else {
+            this.images = []
+        }
+    }
+
+    addImage(image){
+        this.images.push(image)
+    }
+
+    getImages(){
+        return this.images
+    }
+
+    getImage(id){
+        if (id){
+            for (let image of this.images){
+                if (image.id === id) return image
+            }
+        } else return false
+    }
+
+    showImages(){
+        console.log(this.images)
+    }
+}
 
 
 // ---- Yandex API ----
@@ -45,9 +73,9 @@ function loadError(){
 }
 
 let myMap
-let mapCollection
 let multiRoute
 let myPlaces = new FavorPlaces(JSON.parse(loadFromLS('myMapFavor')))
+let myImages = new FavorImages(JSON.parse(loadFromLS('myImgs')))
 
 
 ymaps.ready(['Panel']).then(function () {
@@ -77,7 +105,8 @@ ymaps.ready(['Panel']).then(function () {
         // Создаем экземпляр класса ymaps.control.SearchControl
         mySearchControl = new ymaps.control.SearchControl({
             options: {
-                noPlacemark: true
+                noPlacemark: true,
+                float: 'right'
             }
         }),
         // Результаты поиска будем помещать в коллекцию.
@@ -120,6 +149,7 @@ ymaps.ready(['Panel']).then(function () {
         //TODO: Закрыть открытую панель с информацией о точке
     })
 
+    //TODO: Нельзя выбрать другой маршрут - ошибка
     myMap.geoObjects.events.add('click', (e) => {
 
         // Удалить маршруты с карты
@@ -132,13 +162,14 @@ ymaps.ready(['Panel']).then(function () {
 
         //TODO: Сделать проверку на повторное добавление
 
-        if (objData.myId){
-            console.log('У объекта есть ID - он уже в базе')
-
-            // Зададим контент боковой панели.
-            panel.setContent(target.properties.get('balloonContent'));
-            // Переместим центр карты по координатам метки с учётом заданных отступов.
-            myMap.panTo(target.geometry.getCoordinates(), {useMapMargin: true});
+        if (objData.myId || objData.myId === 'myId'){
+            console.log('Нельзя добавить объект в базу: или есть Id, или это я.')
+            if (objData.myId != 'myId'){
+                // Зададим контент боковой панели.
+                panel.setContent(target.properties.get('balloonContent'));
+                // Переместим центр карты по координатам метки с учётом заданных отступов.
+                myMap.panTo(target.geometry.getCoordinates(), {useMapMargin: true});
+            }
 
         } else {
             const objCoords = e.get('target').geometry.getCoordinates()
@@ -147,7 +178,7 @@ ymaps.ready(['Panel']).then(function () {
             const objAddress = objData.address
             // const objRate = objData.rating.score
 
-            let place = {
+            const place = {
                 coords: objCoords,
                 type: objCategories,
                 name: objName,
@@ -157,25 +188,20 @@ ymaps.ready(['Panel']).then(function () {
             }
 
             myPlaces.addPlace(place)
-
             // Сохраняем избранное в базу
             saveToLS('myMapFavor', JSON.stringify(myPlaces.getPlaces()))
         }
 
-
-
         //TODO: Сделать управление объектами на карте через коллекции
-
-        // Коллекция геообъектов любимых мест
-        mapCollection = new ymaps.GeoObjectCollection(null, {
-            // Запретим появление балуна.
-            hasBalloon: false,
-            iconColor: '#3b5998',
-            // hintContentLayout: ymaps.templateLayoutFactory.createClass('$[properties.name]')
-        })
+        // // Коллекция геообъектов любимых мест
+        // mapCollection = new ymaps.GeoObjectCollection(null, {
+        //     // Запретим появление балуна.
+        //     hasBalloon: false,
+        //     iconColor: '#3b5998',
+        //     // hintContentLayout: ymaps.templateLayoutFactory.createClass('$[properties.name]')
+        // })
 
     })
-
 
     // Создадим и добавим панель на карту.
     let panel = new ymaps.Panel();
@@ -186,6 +212,30 @@ ymaps.ready(['Panel']).then(function () {
 })
 
 function setPlacemarkOnMap(id, mark){
+    let balloonContent =
+        `<h3>${mark.name}</h3>`+
+        `<p>` +
+        `<b>Категория:</b> ${mark.type} <br>` +
+        `<b>Адрес:</b> ${mark.address} <br>` +
+        `<b>Моя оценка:</b> ${mark.myRate} <br>` +
+        `</p>`
+
+    const routeButton = `<button onclick="makeRoute(${JSON.stringify(mark.coords)})">Маршрут</button> <br>`
+
+    const addPhotoBlock =
+        `<button id="buttonUploadPhoto" onclick="drawUploadPhotoPanel(${id})">Загрузить фото</button> <br>` +
+        `<div id="divSendPhoto"></div><br>`
+
+
+    if (!myImages.getImage(id)) {
+        balloonContent += addPhotoBlock
+    } else {
+        const image = `<img src="${myImages.getImage(id).data}"/><br>`
+        balloonContent += image
+    }
+
+    balloonContent += routeButton
+
     if (myMap) {
         if (mark){
             // console.log(mark)
@@ -193,16 +243,7 @@ function setPlacemarkOnMap(id, mark){
             let placemark = new ymaps.Placemark(mark.coords, {
                     myId: id,
                     // hasBalloon: false,
-                    balloonContent:
-                        `<h3>${mark.name}</h3>`+
-                        `<p>` +
-                        `<b>Категория:</b> ${mark.type} <br>` +
-                        `<b>Адрес:</b> ${mark.address} <br>` +
-                        `<b>Моя оценка:</b> ${mark.myRate} <br>` +
-                        `<p>` +
-                        `<button onclick="makeRoute(${JSON.stringify(mark.coords)})">Маршрут</button> <br><br>` +
-                        `<button onclick="ratePlace(id)">Оценить</button> <br><br>` +
-                        `<button onclick="uploadPhoto(id)">Загрузить фото</button>`,
+                    balloonContent: balloonContent,
                 },
                 {
                     iconColor: '#3b5998',
@@ -212,17 +253,16 @@ function setPlacemarkOnMap(id, mark){
                 })
             // console.log(placemark)
 
-            myMap.geoObjects.add(placemark);
+            myMap.geoObjects.add(placemark)
         } else {
             console.log('Please try again')
         }
     }
 }
 
-
 // Добавить объекты в коллекцию и на карту
 function showFavorOnMap(places){
-
+    clearMap()
     for (let place of places.places){
         // console.log(place)
         // const mark = place.place
@@ -237,23 +277,6 @@ function showFavorOnMap(places){
         // }))
     }
     console.log('Объекты загружены на карту из Локалстораджа')
-}
-
-
-// Просто что-то найти из кода. Каждый раз добавляется кнопка поиска.
-function search(){
-    let searchControl = new ymaps.control.SearchControl({
-        options: {
-            provider: 'yandex#search'
-        }
-    })
-    myMap.controls.add(searchControl)
-    if (myMap){
-        // console.log(searchControl.search('Дворцовая площадь, 2'))
-        console.log(searchControl.search('Красная площадь'))
-    } else {
-        console.log('Please try again')
-    }
 }
 
 
@@ -276,8 +299,11 @@ function getUserLocation(){
             myMap.panTo(userCoordinates)
             // Пропишем полученный адрес в балуне.
             result.geoObjects.get(0).properties.set({
-                balloonContentBody: 'Адрес: ' + userAddress +
-                    '<br/>Координаты:' + userCoordinates
+                myId: 'myId',
+                balloonContentBody:
+                    '<b>Мое положение</b>' +
+                    '<br>Адрес: ' + userAddress +
+                    '<br>Координаты:' + userCoordinates
             })
             //Сохраняем координаты в LocalStorage
             saveToLS('myPos', JSON.stringify(userCoordinates))
@@ -289,8 +315,6 @@ function getUserLocation(){
         }
     );
 }
-
-
 
 // Проложить маршрут от моего местоположения
 // https://yandex.ru/dev/jsapi-v2-1/doc/ru/v2-1/dg/concepts/router/multiRouter
@@ -325,6 +349,86 @@ function makeRoute(coordsTo){
 
 // --------
 
+// ---- HTML API FileReader ----
+
+
+function drawUploadPhotoPanel(id){
+    const divSendPhoto = document.getElementById('divSendPhoto')
+
+    if (divSendPhoto.hasChildNodes()){
+        divSendPhoto.innerHTML = ''
+        divSendPhoto.style.display = 'none'
+    } else {
+        const label = document.createElement('label')
+        label.htmlFor = 'image_uploads'
+        label.innerHTML = 'Выбрать фото (PNG, JPG)'
+
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.id = 'image_uploads'
+        input.accept = '.jpg, .jpeg, .png'
+
+        divSendPhoto.appendChild(label)
+        divSendPhoto.appendChild(input)
+        divSendPhoto.style.display = 'block'
+
+        input.addEventListener('change', (e) => {
+            const files = e.target.files
+            // сохраним количество элементов в files в переменную countFiles
+            const countFiles = files.length
+            // если количество выбранных файлов больше 0
+            if (!countFiles) {
+                alert("Не выбран файл!")
+                return
+            }
+
+            // присваиваем переменной selectedFile ссылку на выбранный файл
+            const selectedFile = files[0]
+
+            if (!/^image/.test(selectedFile.type)) {
+                alert("Выбранный файл не является изображением!")
+                return
+            }
+            const reader = new FileReader()
+            reader.readAsDataURL(selectedFile)
+
+            reader.addEventListener("load", (e) => {
+
+                const imgData = {
+                    id: id,
+                    fileName: selectedFile.name,
+                    fileSize: (selectedFile.size / 1024).toFixed(1),
+                    data: e.target.result
+                }
+
+                myImages.addImage(imgData)
+                // Сохраняем избранное в базу
+                saveToLS('myImgs', JSON.stringify(myImages.getImages()))
+
+                divSendPhoto.innerHTML = ''
+                divSendPhoto.style.display = 'none'
+                const button = document.getElementById('buttonUploadPhoto')
+                button.remove()
+
+                // Перерисовываем точки заново
+                //TODO: Не уверен, что так делать правильно
+                clearMap()
+                showFavorOnMap(myPlaces)
+
+            })
+
+            reader.addEventListener("error", () => {
+                console.error(
+                    `При чтении файла произошла ошибка: ${selectedFile.name}`
+                )
+            })
+
+        })
+    }
+}
+
+
+// --------
 
 // ---- HTML API Geolocation ----
 function getMyLocation() {
@@ -459,3 +563,19 @@ function countObjects(){
 //     });
 // }
 
+
+// Просто что-то найти из кода. Каждый раз добавляется кнопка поиска.
+// function search(){
+//     let searchControl = new ymaps.control.SearchControl({
+//         options: {
+//             provider: 'yandex#search'
+//         }
+//     })
+//     myMap.controls.add(searchControl)
+//     if (myMap){
+//         // console.log(searchControl.search('Дворцовая площадь, 2'))
+//         console.log(searchControl.search('Красная площадь'))
+//     } else {
+//         console.log('Please try again')
+//     }
+// }

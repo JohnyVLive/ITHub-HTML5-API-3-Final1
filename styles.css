@@ -14,29 +14,39 @@ html, body, #YMapsID{
 
 .customControl {
     display: none;
+    flex-direction: column-reverse;
     background-color: #fff;
     padding: 5px;
     border-radius: 3px;
-    max-width: 350px;
+    width: 350px;
     height: 100%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
+.customControl h3 {
+    margin: 0px;
+}
+
 .closeButton {
-    flex-basis: 15px;
+    /*flex-basis: 15px;*/
     flex-grow: 0;
     flex-shrink: 0;
-    padding: 3px;
+    padding: 15px;
     height: 15px;
     cursor: pointer;
     background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCI+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMTQgLjdsLS43LS43TDcgNi4zLjcgMCAwIC43IDYuMyA3IDAgMTMuM2wuNy43TDcgNy43bDYuMyA2LjMuNy0uN0w3LjcgN3oiIGNsaXAtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==") 50% no-repeat;
     opacity: 0.3;
+    align-self: flex-end;
 }
 
 .content {
     padding: 5px;
-    max-height: 450px;
     overflow: auto;
+}
+
+.content img{
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 a, a:visited {
@@ -74,4 +84,52 @@ button {
 .button.active {
     background: #3e6ae1;
     color: #fff;
+}
+
+
+div#divSendPhoto{
+    display: none;
+    max-width: 320px;
+    background: #ccc;
+    margin: 20px 10px 0 10px;
+    padding: 20px;
+    border: 1px solid black;
+}
+
+
+#divSendPhoto img {
+    height: 64px;
+    order: 1;
+}
+
+#divSendPhoto p {
+    line-height: 32px;
+    padding-left: 10px;
+}
+
+#divSendPhoto label,
+#divSendPhoto button {
+    background-color: #7f9ccb;
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px ridge black;
+    font-size: 0.8rem;
+    height: auto;
+}
+
+#divSendPhoto label:hover,
+#divSendPhoto button:hover {
+    background-color: #2d5ba3;
+    color: white;
+}
+
+#divSendPhoto label:active,
+#divSendPhoto button:active {
+    background-color: #0d3f8f;
+    color: white;
+}
+
+#divSendPhoto input{
+    display: none;
 }
