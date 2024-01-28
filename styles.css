@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter&family=Roboto:wght@400;700&family=Titillium+Web&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+html, body, #YMapsID{
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.customControl {
+    display: none;
+    background-color: #fff;
+    padding: 5px;
+    border-radius: 3px;
+    max-width: 350px;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.closeButton {
+    flex-basis: 15px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: 3px;
+    height: 15px;
+    cursor: pointer;
+    background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNCIgaGVpZ2h0PSIxNCI+PHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBkPSJNMTQgLjdsLS43LS43TDcgNi4zLjcgMCAwIC43IDYuMyA3IDAgMTMuM2wuNy43TDcgNy43bDYuMyA2LjMuNy0uN0w3LjcgN3oiIGNsaXAtcnVsZT0iZXZlbm9kZCIvPjwvc3ZnPg==") 50% no-repeat;
+    opacity: 0.3;
+}
+
+.content {
+    padding: 5px;
+    max-height: 450px;
+    overflow: auto;
+}
+
+a, a:visited {
+    color: #04b;
+    text-decoration: none !important;
+}
+
+p {
+    font-weight: 400;
+    font-size: 14px;
+}
+
+
+button {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 1rem;
+    background-color: #F9B640;
+
+    color: #FFFFFF;
+    font-weight: 400;
+}
+
+.button:hover {
+    opacity: 0.8;
+}
+
+.button:disabled {
+    cursor: not-allowed;
+}
+
+.button.active {
+    background: #3e6ae1;
+    color: #fff;
+}
