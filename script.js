@@ -304,12 +304,12 @@ function clearMap(){
 }
 
 // Определение адреса по координатам (обратное геокодирование).
-async function getAddress(coords) {
+function getAddress(coords) {
     let myGeocoder = ymaps.geocode(coords)
     myGeocoder.then(function(res) {
         //TODO: Очень хочу разобраться с тем, почему функция не успевает (???) вернуть данные
         console.log('Адрес: ' + res.geoObjects.get(0).getAddressLine())
-        return res.geoObjects.get(0).getAddressLine()
+        // return res.geoObjects.get(0).getAddressLine()
     })
 }
 
