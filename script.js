@@ -77,6 +77,9 @@ let multiRoute
 let myPlaces = new FavorPlaces(JSON.parse(loadFromLS('myMapFavor')))
 let myImages = new FavorImages(JSON.parse(loadFromLS('myImgs')))
 
+let divFavorList
+let ulFavorList
+
 
 ymaps.ready(['Panel']).then(function () {
 
@@ -120,6 +123,9 @@ ymaps.ready(['Panel']).then(function () {
 
     myMap.controls.add(mySearchControl)
     myMap.geoObjects.add(mySearchResults)
+
+    //Загружаем из LocalStorage и наводимся на положение пользователя
+    showUserLocation()
 
 
     // При клике по найденному объекту метка становится красной.
@@ -252,7 +258,6 @@ function setPlacemarkOnMap(id, mark){
                     hintContentLayout: ymaps.templateLayoutFactory.createClass('<h3>$[mark.name]</h3>')
                 })
             // console.log(placemark)
-
             myMap.geoObjects.add(placemark)
         } else {
             console.log('Please try again')
@@ -261,32 +266,87 @@ function setPlacemarkOnMap(id, mark){
 }
 
 // Добавить объекты в коллекцию и на карту
-function showFavorOnMap(places){
+function showFavor(places){
     clearMap()
+    getUserLocation()
+
+    divFavorList = document.getElementById('divFavorList')
+    ulFavorList = document.getElementById('ulFavorList')
+    divFavorList.style.display = 'block'
+
     for (let place of places.places){
-        // console.log(place)
-        // const mark = place.place
         setPlacemarkOnMap(place.id, place.place)
-        //Добавляем информацию об объекте в коллекцию
-        // collection.add(new ymaps.Placemark(mark.coords, {
-        //     balloonContent:
-        //         `Категория: ${mark.type} <br>
-        //             Название: ${mark.name} <br>
-        //             Адрес: ${mark.address}<br>`,
-        //     hintContentLayout: mark.name
-        // }))
+        drawFavorList(place)
+
     }
-    console.log('Объекты загружены на карту из Локалстораджа')
+    console.log('Объекты загружены из Локалстораджа')
 }
 
+function drawFavorList(place){
+    const li = document.createElement('li')
+    li.id = place.id
+    li.innerHTML =
+        `<b>${place.place.name}</b>` +
+        `<ul>` +
+        `<li>${place.place.address}</li>` +
+        `<li style="color: #0044bb; cursor: pointer;" onclick="makeRoute(${JSON.stringify(place.place.coords)})">Построить маршрут</li>` +
+        `</ul>`
+    ulFavorList.appendChild(li)
+}
 
 function clearMap(){
-    myMap.geoObjects.removeAll();
-    getUserLocation()
+    myMap.geoObjects.removeAll()
+
+    divFavorList = document.getElementById('divFavorList')
+    ulFavorList = document.getElementById('ulFavorList')
+    divFavorList.style.display = 'none'
+    ulFavorList.innerHTML = ''
+}
+
+// Определение адреса по координатам (обратное геокодирование).
+async function getAddress(coords) {
+    let myGeocoder = ymaps.geocode(coords)
+    myGeocoder.then(function(res) {
+        //TODO: Очень хочу разобраться с тем, почему функция не успевает (???) вернуть данные
+        console.log('Адрес: ' + res.geoObjects.get(0).getAddressLine())
+        return res.geoObjects.get(0).getAddressLine()
+    })
+}
+
+//User Geoposition from LocalStorage
+function showUserLocation(){
+    if (loadFromLS('myPos')){
+        const coords = JSON.parse(loadFromLS('myPos'))
+        const address = getAddress(coords)
+
+        const balloonContent =
+            '<b>Мое положение</b>' +
+            '<br>Адрес: ' + address +
+            '<br>Координаты:' + coords
+
+        let placemark = new ymaps.Placemark(coords, {
+                myId: 'myId',
+                balloonContent: balloonContent,
+            },
+            {
+                // preset: "islands#circleDotIcon",
+                // iconColor: '#ff0000'
+                iconLayout: 'default#image',
+                iconImageHref: 'https://api-maps.yandex.ru/2.1.79/build/release/images/geolocation/YaRu.svg',
+                iconImageSize: [35, 35]
+            })
+        // console.log(placemark)
+
+        myMap.geoObjects.add(placemark)
+        myMap.setZoom(12)
+        myMap.panTo(coords)
+
+    }
 }
 
 //User Geoposition from Yandex
 function getUserLocation(){
+    clearMap()
     let location = ymaps.geolocation.get({
         provider: 'browser'
     });
@@ -303,7 +363,7 @@ function getUserLocation(){
                 balloonContentBody:
                     '<b>Мое положение</b>' +
                     '<br>Адрес: ' + userAddress +
-                    '<br>Координаты:' + userCoordinates
+                    '<br>Координаты:' + userCoordinates,
             })
             //Сохраняем координаты в LocalStorage
             saveToLS('myPos', JSON.stringify(userCoordinates))
@@ -319,8 +379,7 @@ function getUserLocation(){
 // Проложить маршрут от моего местоположения
 // https://yandex.ru/dev/jsapi-v2-1/doc/ru/v2-1/dg/concepts/router/multiRouter
 function makeRoute(coordsTo){
-
-    getUserLocation()
+    // getUserLocation()
     const coordsFrom = JSON.parse(loadFromLS('myPos'))
 
     // Удалить предыдущий маршрут
@@ -350,7 +409,6 @@ function makeRoute(coordsTo){
 // --------
 
 // ---- HTML API FileReader ----
-
 
 function drawUploadPhotoPanel(id){
     const divSendPhoto = document.getElementById('divSendPhoto')
@@ -413,7 +471,7 @@ function drawUploadPhotoPanel(id){
                 // Перерисовываем точки заново
                 //TODO: Не уверен, что так делать правильно
                 clearMap()
-                showFavorOnMap(myPlaces)
+                showFavor(myPlaces)
 
             })
 

@@ -17,13 +17,19 @@
     <input type="button" value="Найти меня" onclick="getUserLocation()" />
     <br>
     <br>
-    <input type="button" value="Показать моё избранное" onclick="showFavorOnMap(myPlaces)" />
+    <input type="button" value="Показать моё избранное" onclick="showFavor(myPlaces)" />
     <br>
     <br>
     <input type="button" value="Очистить LocalStorage" onclick="clearLS()" />
     <input type="button" value="Очистить карту" onclick="clearMap()" />
 
 </div>
+
+<div id="divFavorList">
+    <ul id="ulFavorList">
+    </ul>
+</div>
+
 
 </body>
 </html>

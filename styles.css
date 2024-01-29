@@ -133,3 +133,12 @@ div#divSendPhoto{
 #divSendPhoto input{
     display: none;
 }
+
+ul {
+    padding-bottom: 5px;
+}
+ul,
+ul{
+    padding-left: 2rem;
+    list-style-type: none;
+}
