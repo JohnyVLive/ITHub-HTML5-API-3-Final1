@@ -118,14 +118,17 @@ ymaps.ready(['Panel']).then(function () {
                 '<h3>$[properties.name]</h3>' +
                 '<b>Оценка:</b> $[properties.rating.score]'
             )
-        }), loadSuccess()
+        })
+
+    loadSuccess()
+    showUserLocation()
 
 
     myMap.controls.add(mySearchControl)
     myMap.geoObjects.add(mySearchResults)
 
-    //Загружаем из LocalStorage и наводимся на положение пользователя
-    showUserLocation()
+    // //Загружаем из LocalStorage и наводимся на положение пользователя
+    // showUserLocation()
 
 
     // При клике по найденному объекту метка становится красной.
@@ -148,7 +151,7 @@ ymaps.ready(['Panel']).then(function () {
     // })
 
     // Действия при клике на строке поиска
-    mySearchControl.events.add('click', (e) => {
+    mySearchControl.events.add('click', () => {
         // Удалить маршруты с карты
         myMap.geoObjects.remove(multiRoute)
 
@@ -317,7 +320,7 @@ function getAddress(coords) {
 function showUserLocation(){
     if (loadFromLS('myPos')){
         const coords = JSON.parse(loadFromLS('myPos'))
-        const address = getAddress(coords)
+        const address = ''
 
         const balloonContent =
             '<b>Мое положение</b>' +
@@ -340,7 +343,6 @@ function showUserLocation(){
         myMap.geoObjects.add(placemark)
         myMap.setZoom(12)
         myMap.panTo(coords)
-
     }
 }
 
